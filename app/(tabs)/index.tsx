@@ -1,67 +1,109 @@
-import { View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet, Alert } from 'react-native'
-import React, { useState } from 'react'
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  FlatList,
+  StyleSheet,
+  Alert,
+} from "react-native";
+import React, { useState } from "react";
 
 const Index = () => {
   // State variables for storing title and description
-  const [title, setTitle] = useState('')
-  const [description, setDescription] = useState('')
-  const [notes, setNotes] = useState([])
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [notes, setNotes] = useState([]);
+
+  const [editSwitch, setEditSwitch] = useState(true);
+  const [noteToBeEdit, setNoteToBeEdit] = useState(null);
+
+  const [editTitle, setEditTitle] = useState("");
+  const [editDescription, setEditDescription] = useState("");
 
   // Function to add a new note
   const addNote = () => {
-    if (title.trim() === '' || description.trim() === '') {
-      Alert.alert('Error', 'Please fill in both title and description')
-      return
+    if (title.trim() === "" || description.trim() === "") {
+      Alert.alert("Error", "Please fill in both title and description");
+      return;
     }
 
     const newNote = {
       id: Date.now().toString(),
       title: title,
       description: description,
-      dateTime: new Date().toLocaleString()
-    }
+      dateTime: new Date().toLocaleString(),
+    };
 
-    setNotes([newNote, ...notes])
-    setTitle('')
-    setDescription('')
-  }
+    setNotes([newNote, ...notes]);
+    setTitle("");
+    setDescription("");
+  };
 
   // Function to delete a note
   const deleteNote = (id) => {
-    Alert.alert(
-      'Delete Note',
-      'Are you sure you want to delete this note?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { 
-          text: 'Delete', 
-          onPress: () => setNotes(notes.filter(note => note.id !== id)),
-          style: 'destructive'
-        }
-      ]
-    )
-  }
+    Alert.alert("Delete Note", "Are you sure you want to delete this note?", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Delete",
+        onPress: () => setNotes(notes.filter((note) => note.id !== id)),
+        style: "destructive",
+      },
+    ]);
+    setEditSwitch(false);
+    setEditTitle("");
+    setEditDescription("");
+  };
 
   // Function to edit a note
   const editNote = (note) => {
-    setTitle(note.title)
-    setDescription(note.description)
-    deleteNote(note.id)
-  }
+    setEditTitle(note.title);
+    setEditDescription(note.description);
+    setEditSwitch(!editSwitch);
+    console.log(note);
+    setNoteToBeEdit(note.id);
+  };
+
+  const applyEdit = () => {
+    setNotes((prevNotes) => {
+      const updated = prevNotes.map((it) =>
+        it.id === noteToBeEdit
+          ? {
+              ...it,
+              title: editTitle,
+              description: editDescription,
+              dateTime: new Date().toLocaleString(),
+            }
+          : it,
+      );
+
+      return updated;
+    });
+    setEditDescription("");
+    setEditTitle("");
+    setEditSwitch(false);
+  };
+
+  const cancelEdit = () => {
+    setEditDescription("");
+    setEditTitle("");
+    setEditSwitch(false);
+    setNoteToBeEdit(null);
+  };
 
   // Render each note item
-  const renderNoteItem = ({ item }) => (
+  const renderNoteItem = ({ item, idx }) => (
     <View style={styles.noteCard}>
       <View style={styles.noteHeader}>
         <Text style={styles.noteTitle}>{item.title}</Text>
         <View style={styles.actionButtons}>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.editButton}
-            onPress={() => editNote(item)}
+            onPress={() => editNote(item, idx)}
           >
             <Text style={styles.editButtonText}>Edit</Text>
           </TouchableOpacity>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.deleteButton}
             onPress={() => deleteNote(item.id)}
           >
@@ -72,7 +114,7 @@ const Index = () => {
       <Text style={styles.noteDateTime}>{item.dateTime}</Text>
       <Text style={styles.noteDescription}>{item.description}</Text>
     </View>
-  )
+  );
 
   return (
     <View style={styles.container}>
@@ -80,92 +122,135 @@ const Index = () => {
         <Text style={styles.headerTitle}>Notes App</Text>
       </View>
 
-      {/* Input Section */}
-      <View style={styles.inputSection}>
-        <View style={styles.inputGroup}>
-          <Text style={styles.label}>Title</Text>
-          <TextInput 
-            style={styles.input}
-            placeholder='Enter title...'
-            placeholderTextColor="#999"
-            value={title}
-            onChangeText={setTitle}
-          />
-        </View>
+      {editSwitch ? (
+        <View style={styles.inputSection}>
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Title</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Enter title..."
+              placeholderTextColor="#999"
+              value={editTitle}
+              onChangeText={setEditTitle}
+            />
+          </View>
 
-        <View style={styles.inputGroup}>
-          <Text style={styles.label}>Description</Text>
-          <TextInput 
-            style={[styles.input, styles.textArea]}
-            placeholder='Enter description...'
-            placeholderTextColor="#999"
-            multiline
-            numberOfLines={3}
-            value={description}
-            onChangeText={setDescription}
-          />
-        </View>
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Description</Text>
+            <TextInput
+              style={[styles.input, styles.textArea]}
+              placeholder="Enter description..."
+              placeholderTextColor="#999"
+              multiline
+              numberOfLines={3}
+              value={editDescription}
+              onChangeText={setEditDescription}
+            />
+          </View>
 
-        <TouchableOpacity style={styles.addButton} onPress={addNote}>
-          <Text style={styles.addButtonText}>Add Note</Text>
-        </TouchableOpacity>
-      </View>
+          <View
+            style={{
+              display: "flex",
+              flexDirection: "row",
+              justifyContent: "center",
+              gap: "20",
+            }}
+          >
+            <TouchableOpacity style={styles.editButtonnn} onPress={cancelEdit}>
+              <Text style={styles.addButtonText}>Cancel</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.editButtonn} onPress={applyEdit}>
+              <Text style={styles.addButtonText}>Edit Note</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      ) : (
+        <View style={styles.inputSection}>
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Title</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Enter title..."
+              placeholderTextColor="#999"
+              value={title}
+              onChangeText={setTitle}
+            />
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Description</Text>
+            <TextInput
+              style={[styles.input, styles.textArea]}
+              placeholder="Enter description..."
+              placeholderTextColor="#999"
+              multiline
+              numberOfLines={3}
+              value={description}
+              onChangeText={setDescription}
+            />
+          </View>
+
+          <TouchableOpacity style={styles.addButton} onPress={addNote}>
+            <Text style={styles.addButtonText}>Add Note</Text>
+          </TouchableOpacity>
+        </View>
+      )}
 
       {/* Notes List Section */}
       <View style={styles.notesSection}>
-        <Text style={styles.sectionTitle}>
-          Your Notes ({notes.length})
-        </Text>
-        
+        <Text style={styles.sectionTitle}>Your Notes ({notes.length})</Text>
+
         {notes.length === 0 ? (
           <View style={styles.emptyState}>
             <Text style={styles.emptyStateText}>No notes yet</Text>
-            <Text style={styles.emptyStateSubtext}>Add your first note above</Text>
+            <Text style={styles.emptyStateSubtext}>
+              Add your first note above
+            </Text>
           </View>
         ) : (
           <FlatList
             data={notes}
             renderItem={renderNoteItem}
-            keyExtractor={item => item.id}
+            keyExtractor={(item) => item.id}
             showsVerticalScrollIndicator={false}
             contentContainerStyle={styles.notesList}
           />
         )}
       </View>
     </View>
-  )
-}
+  );
+};
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: "#f5f5f5",
   },
   header: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     paddingTop: 60,
     paddingBottom: 20,
     paddingHorizontal: 20,
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    borderBottomColor: "#e0e0e0",
     elevation: 2,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 2,
   },
   headerTitle: {
     fontSize: 28,
-    fontWeight: 'bold',
-    color: '#333',
+    fontWeight: "bold",
+    color: "#333",
   },
   inputSection: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     margin: 20,
     padding: 20,
     borderRadius: 12,
     elevation: 2,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -175,35 +260,51 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 14,
-    fontWeight: '600',
-    color: '#555',
+    fontWeight: "600",
+    color: "#555",
     marginBottom: 8,
   },
   input: {
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: "#ddd",
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 10,
     fontSize: 16,
-    color: '#333',
-    backgroundColor: '#fafafa',
+    color: "#333",
+    backgroundColor: "#fafafa",
   },
   textArea: {
     height: 80,
-    textAlignVertical: 'top',
+    textAlignVertical: "top",
   },
   addButton: {
-    backgroundColor: '#007AFF',
+    backgroundColor: "#007AFF",
     paddingVertical: 14,
     borderRadius: 8,
-    alignItems: 'center',
+    alignItems: "center",
     marginTop: 10,
   },
+  editButtonn: {
+    backgroundColor: "#0d4682",
+    paddingVertical: 14,
+    borderRadius: 8,
+    alignItems: "center",
+    marginTop: 10,
+    width: 100,
+  },
+  editButtonnn: {
+    backgroundColor: "#7a838d",
+    paddingVertical: 14,
+    borderRadius: 8,
+    alignItems: "center",
+    marginTop: 10,
+    width: 100,
+  },
   addButtonText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   notesSection: {
     flex: 1,
@@ -211,87 +312,87 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 20,
-    fontWeight: 'bold',
-    color: '#333',
+    fontWeight: "bold",
+    color: "#333",
     marginBottom: 15,
   },
   notesList: {
     paddingBottom: 20,
   },
   noteCard: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderRadius: 12,
     padding: 15,
     marginBottom: 12,
     elevation: 1,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 2,
   },
   noteHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 8,
   },
   noteTitle: {
     fontSize: 18,
-    fontWeight: '600',
-    color: '#333',
+    fontWeight: "600",
+    color: "#333",
     flex: 1,
   },
   actionButtons: {
-    flexDirection: 'row',
+    flexDirection: "row",
   },
   editButton: {
     paddingHorizontal: 12,
     paddingVertical: 6,
-    backgroundColor: '#34C759',
+    backgroundColor: "#34C759",
     borderRadius: 6,
     marginLeft: 8,
   },
   editButtonText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   deleteButton: {
     paddingHorizontal: 12,
     paddingVertical: 6,
-    backgroundColor: '#FF3B30',
+    backgroundColor: "#FF3B30",
     borderRadius: 6,
     marginLeft: 8,
   },
   deleteButtonText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   noteDateTime: {
     fontSize: 12,
-    color: '#999',
+    color: "#999",
     marginBottom: 10,
   },
   noteDescription: {
     fontSize: 14,
-    color: '#666',
+    color: "#666",
     lineHeight: 20,
   },
   emptyState: {
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     paddingVertical: 60,
   },
   emptyStateText: {
     fontSize: 18,
-    color: '#999',
+    color: "#999",
     marginBottom: 8,
   },
   emptyStateSubtext: {
     fontSize: 14,
-    color: '#bbb',
+    color: "#bbb",
   },
-})
+});
 
-export default Index
+export default Index;
