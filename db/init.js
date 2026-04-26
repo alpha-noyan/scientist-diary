@@ -12,5 +12,5 @@ export const initDB = async () => {
         );
       `);
 
-  console.log("DB Ready");
+//   console.log("DB Ready");
 };

@@ -16,7 +16,7 @@ const Index = () => {
   const [description, setDescription] = useState("");
   const [notes, setNotes] = useState([]);
 
-  const [editSwitch, setEditSwitch] = useState(true);
+  const [editSwitch, setEditSwitch] = useState(false);
   const [noteToBeEdit, setNoteToBeEdit] = useState(null);
 
   const [editTitle, setEditTitle] = useState("");
@@ -27,7 +27,7 @@ const Index = () => {
     const database = await getDB();
     try{
     const notes = await database.getAllAsync("SELECT * FROM notes");
-    console.log(notes);
+    // console.log(notes);
     setNotes(notes);
     }
     catch(e){
@@ -327,7 +327,7 @@ const styles = StyleSheet.create({
     textAlignVertical: "top",
   },
   addButton: {
-    backgroundColor: "#007AFF",
+    backgroundColor: "#4ca9c5",
     paddingVertical: 14,
     borderRadius: 8,
     alignItems: "center",
