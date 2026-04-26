@@ -119,7 +119,7 @@ const Index = () => {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Notes App</Text>
+        <Text style={styles.headerTitle}>Scientist's Notes</Text>
       </View>
 
       {editSwitch ? (
