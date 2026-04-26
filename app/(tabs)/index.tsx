@@ -1,98 +1,297 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet, Alert } from 'react-native'
+import React, { useState } from 'react'
 
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
+const Index = () => {
+  // State variables for storing title and description
+  const [title, setTitle] = useState('')
+  const [description, setDescription] = useState('')
+  const [notes, setNotes] = useState([])
 
-export default function HomeScreen() {
+  // Function to add a new note
+  const addNote = () => {
+    if (title.trim() === '' || description.trim() === '') {
+      Alert.alert('Error', 'Please fill in both title and description')
+      return
+    }
+
+    const newNote = {
+      id: Date.now().toString(),
+      title: title,
+      description: description,
+      dateTime: new Date().toLocaleString()
+    }
+
+    setNotes([newNote, ...notes])
+    setTitle('')
+    setDescription('')
+  }
+
+  // Function to delete a note
+  const deleteNote = (id) => {
+    Alert.alert(
+      'Delete Note',
+      'Are you sure you want to delete this note?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { 
+          text: 'Delete', 
+          onPress: () => setNotes(notes.filter(note => note.id !== id)),
+          style: 'destructive'
+        }
+      ]
+    )
+  }
+
+  // Function to edit a note
+  const editNote = (note) => {
+    setTitle(note.title)
+    setDescription(note.description)
+    deleteNote(note.id)
+  }
+
+  // Render each note item
+  const renderNoteItem = ({ item }) => (
+    <View style={styles.noteCard}>
+      <View style={styles.noteHeader}>
+        <Text style={styles.noteTitle}>{item.title}</Text>
+        <View style={styles.actionButtons}>
+          <TouchableOpacity 
+            style={styles.editButton}
+            onPress={() => editNote(item)}
+          >
+            <Text style={styles.editButtonText}>Edit</Text>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={styles.deleteButton}
+            onPress={() => deleteNote(item.id)}
+          >
+            <Text style={styles.deleteButtonText}>Delete</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+      <Text style={styles.noteDateTime}>{item.dateTime}</Text>
+      <Text style={styles.noteDescription}>{item.description}</Text>
+    </View>
+  )
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+    <View style={styles.container}>
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>Notes App</Text>
+      </View>
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
-  );
+      {/* Input Section */}
+      <View style={styles.inputSection}>
+        <View style={styles.inputGroup}>
+          <Text style={styles.label}>Title</Text>
+          <TextInput 
+            style={styles.input}
+            placeholder='Enter title...'
+            placeholderTextColor="#999"
+            value={title}
+            onChangeText={setTitle}
+          />
+        </View>
+
+        <View style={styles.inputGroup}>
+          <Text style={styles.label}>Description</Text>
+          <TextInput 
+            style={[styles.input, styles.textArea]}
+            placeholder='Enter description...'
+            placeholderTextColor="#999"
+            multiline
+            numberOfLines={3}
+            value={description}
+            onChangeText={setDescription}
+          />
+        </View>
+
+        <TouchableOpacity style={styles.addButton} onPress={addNote}>
+          <Text style={styles.addButtonText}>Add Note</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Notes List Section */}
+      <View style={styles.notesSection}>
+        <Text style={styles.sectionTitle}>
+          Your Notes ({notes.length})
+        </Text>
+        
+        {notes.length === 0 ? (
+          <View style={styles.emptyState}>
+            <Text style={styles.emptyStateText}>No notes yet</Text>
+            <Text style={styles.emptyStateSubtext}>Add your first note above</Text>
+          </View>
+        ) : (
+          <FlatList
+            data={notes}
+            renderItem={renderNoteItem}
+            keyExtractor={item => item.id}
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.notesList}
+          />
+        )}
+      </View>
+    </View>
+  )
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
+  container: {
+    flex: 1,
+    backgroundColor: '#f5f5f5',
   },
-  stepContainer: {
-    gap: 8,
+  header: {
+    backgroundColor: '#fff',
+    paddingTop: 60,
+    paddingBottom: 20,
+    paddingHorizontal: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+  },
+  headerTitle: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  inputSection: {
+    backgroundColor: '#fff',
+    margin: 20,
+    padding: 20,
+    borderRadius: 12,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  inputGroup: {
+    marginBottom: 15,
+  },
+  label: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#555',
     marginBottom: 8,
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  input: {
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 16,
+    color: '#333',
+    backgroundColor: '#fafafa',
   },
-});
+  textArea: {
+    height: 80,
+    textAlignVertical: 'top',
+  },
+  addButton: {
+    backgroundColor: '#007AFF',
+    paddingVertical: 14,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  addButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  notesSection: {
+    flex: 1,
+    paddingHorizontal: 20,
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 15,
+  },
+  notesList: {
+    paddingBottom: 20,
+  },
+  noteCard: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 15,
+    marginBottom: 12,
+    elevation: 1,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+  },
+  noteHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  noteTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#333',
+    flex: 1,
+  },
+  actionButtons: {
+    flexDirection: 'row',
+  },
+  editButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    backgroundColor: '#34C759',
+    borderRadius: 6,
+    marginLeft: 8,
+  },
+  editButtonText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  deleteButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    backgroundColor: '#FF3B30',
+    borderRadius: 6,
+    marginLeft: 8,
+  },
+  deleteButtonText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  noteDateTime: {
+    fontSize: 12,
+    color: '#999',
+    marginBottom: 10,
+  },
+  noteDescription: {
+    fontSize: 14,
+    color: '#666',
+    lineHeight: 20,
+  },
+  emptyState: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 60,
+  },
+  emptyStateText: {
+    fontSize: 18,
+    color: '#999',
+    marginBottom: 8,
+  },
+  emptyStateSubtext: {
+    fontSize: 14,
+    color: '#bbb',
+  },
+})
+
+export default Index
