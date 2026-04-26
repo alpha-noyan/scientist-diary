@@ -7,7 +7,8 @@ import {
   StyleSheet,
   Alert,
 } from "react-native";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { getDB } from "@/db/connection";
 
 const Index = () => {
   // State variables for storing title and description
@@ -21,8 +22,25 @@ const Index = () => {
   const [editTitle, setEditTitle] = useState("");
   const [editDescription, setEditDescription] = useState("");
 
+  const fetchNotes = async () => {
+    // sds
+    const database = await getDB();
+    try{
+    const notes = await database.getAllAsync("SELECT * FROM notes");
+    console.log(notes);
+    setNotes(notes);
+    }
+    catch(e){
+      console.log(e)
+    }
+  };
+
+  useEffect(() => {
+    fetchNotes();
+  }, []);
+
   // Function to add a new note
-  const addNote = () => {
+  const addNote = async () => {
     if (title.trim() === "" || description.trim() === "") {
       Alert.alert("Error", "Please fill in both title and description");
       return;
@@ -35,10 +53,31 @@ const Index = () => {
       dateTime: new Date().toLocaleString(),
     };
 
-    setNotes([newNote, ...notes]);
+    const db = await getDB();
+    try{
+    await db.runAsync(
+      `INSERT INTO notes (id,title,description,dateTime) VALUES (?,?,?,?)`,
+      [newNote.id, newNote.title, newNote.description, newNote.dateTime],
+    );} catch(e){
+      console.log(e)
+    }
+
+    // setNotes([newNote, ...notes]);
+    fetchNotes()
     setTitle("");
     setDescription("");
   };
+
+  const del = async (id) => {
+  const db = await getDB();
+
+  await db.runAsync(
+    `DELETE FROM notes WHERE id = ?`,
+    [id]
+  );
+
+  await fetchNotes(); // keep DB as source of truth
+};
 
   // Function to delete a note
   const deleteNote = (id) => {
@@ -46,7 +85,7 @@ const Index = () => {
       { text: "Cancel", style: "cancel" },
       {
         text: "Delete",
-        onPress: () => setNotes(notes.filter((note) => note.id !== id)),
+        onPress: () => del(id),
         style: "destructive",
       },
     ]);
@@ -60,11 +99,20 @@ const Index = () => {
     setEditTitle(note.title);
     setEditDescription(note.description);
     setEditSwitch(!editSwitch);
-    console.log(note);
     setNoteToBeEdit(note.id);
   };
 
-  const applyEdit = () => {
+  const applyEdit = async () => {
+    const db = await getDB();
+    try{
+    await db.runAsync(
+      `UPDATE notes
+      SET title = ?, description = ?, dateTime = ?
+      WHERE id = ?`,
+      [editTitle, editDescription, new Date().toLocaleString(), noteToBeEdit],
+    );} catch (e){
+      console.log(e)
+    }
     setNotes((prevNotes) => {
       const updated = prevNotes.map((it) =>
         it.id === noteToBeEdit
